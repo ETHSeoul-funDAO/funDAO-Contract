@@ -46,26 +46,36 @@ contract Vault is IVault, ERC20 {
 
         ERC20(baseToken).safeTransferFrom(msg.sender, address(this), amount);
         _mint(msg.sender, amount);
+
+        emit Deposit(msg.sender, amount);
     }
     function withdraw(uint256 amount) external {
         require(block.timestamp < fundingEnd, "funding finished");
+
         _burn(msg.sender, amount);
         ERC20(baseToken).safeTransfer(msg.sender, amount);
+
+        emit Withdraw(msg.sender, amount);
     }
 
     function propose(address target, uint256 amount, string memory title, string memory description, uint256 deadline) external onlyOwner returns(uint256) {
         uint256 id = proposals.length;
         uint256 targetVote = totalSupply() * threshold / DENOM;
+
         proposals.push(Proposal(target, amount, title, description, deadline, targetVote, false));
+
         emit ProposalCreated(id, msg.sender, target, amount, title, description, deadline, targetVote);
+
         return id;
     }
 
     function vote(uint256 id, uint256 amount) external {
         require(block.timestamp < proposals[id].deadline, "vote finish");
         require(userVotes[id][msg.sender] + amount <= balanceOf(msg.sender), "need token");
+
         userVotes[id][msg.sender] += amount;
         proposalVotes[id] += amount;
+
         emit Vote(id, msg.sender, amount);
     }
 
@@ -73,6 +83,7 @@ contract Vault is IVault, ERC20 {
         require(block.timestamp > proposals[id].deadline, "vote not finish");
         require(proposals[id].targetVote <= proposalVotes[id], "rejected");
         require(proposals[id].executed == false, "executed");
+        
         proposals[id].executed = true;
 
         ERC20(baseToken).safeTransfer(proposals[id].target, proposals[id].amount);

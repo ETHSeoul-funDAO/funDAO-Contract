@@ -13,6 +13,16 @@ interface IVault {
         bool executed;
     }
 
+    event Deposit(
+        address user,
+        uint256 amount
+    );
+
+    event Withdraw(
+        address user,
+        uint256 amount
+    );
+
     event ProposalCreated(
         uint256 id,
         address proposer,

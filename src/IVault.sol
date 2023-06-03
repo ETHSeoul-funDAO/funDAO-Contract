@@ -23,6 +23,18 @@ interface IVault {
         uint256 amount
     );
 
+    event Distribute(
+        address rewardToken,
+        uint256 amount,
+        uint256 rewardPerShare
+    );
+
+    event Claim(
+        address user,
+        uint256 amount
+    );
+
+
     event ProposalCreated(
         uint256 id,
         address proposer,
@@ -47,8 +59,11 @@ interface IVault {
 
     function deposit(uint256 amount) external;
     function withdraw(uint256 amount) external;
+    function distribute(uint256 amount) external;
+    function claim() external;
     function propose(address target, uint256 amount, string memory title, string memory description, uint256 deadline) external returns(uint256);
     function vote(uint256 id, uint256 amount) external;
     function execute(uint256 id) external;
+    
 
 }

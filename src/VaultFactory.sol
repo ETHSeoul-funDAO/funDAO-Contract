@@ -14,6 +14,7 @@ contract VaultFactory {
 
     uint256 public constant DENOM = 1e5;
     uint public constant DEFAULT_THRESHOLD = 0.51e8;
+    
     modifier onlyOwner {
         require(owner == msg.sender, "only Owner");
         _;
@@ -35,7 +36,8 @@ contract VaultFactory {
         Vault newFund = new Vault(_owner, _tokenName, _symbol, _baseToken, _fundingEnd, DEFAULT_THRESHOLD);
         funds.push(newFund);
 
-        emit RaiseFund(fundId, _owner, _tokenName, _symbol, _baseToken, _fundingEnd, DEFAULT_THRESHOLD);
+        emit RaiseFund(address(newFund), fundId, _owner, _tokenName, _symbol, _baseToken, _fundingEnd, DEFAULT_THRESHOLD);
+
         return newFund;
     }
 }

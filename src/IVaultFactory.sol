@@ -15,6 +15,7 @@ interface IVaultFactory {
     );
 
     function raiseFund(
+        address vault,
         address _owner,
         string memory _tokenName, 
         string memory _symbol, 

@@ -3,21 +3,34 @@ pragma solidity ^0.8.13;
 
 import "forge-std/Test.sol";
 import "../src/Vault.sol";
+import "../src/VaultFactory.sol";
+import "../src/KYC.sol";
+
 import "../src/mock/MockBaseToken.sol";
 
 contract VaultTest is Test {
+    VaultFactory public vaultFactory;
     Vault public vault;
     MockBaseToken public mockBaseToken;
+    MockBaseToken public mockRewardToken;
+    KYC public kyc;
 
     address public user = address(0x123);
     address public owner = address(0x112233);
+    address public factoryOwner = address(0x1111);
 
     uint256 public constant TEST_AMOUNT = 10_000 ether;
     uint256 public constant PROPOSE_AMOUNT = 100 ether;
     function setUp() public {
         mockBaseToken = new MockBaseToken();
-        vault = new Vault(owner, "TestFund", "FUND", address(mockBaseToken), block.timestamp + 1 days, 0.5e5);
+        kyc = new KYC(factoryOwner);
+        vaultFactory = new VaultFactory(factoryOwner, address(kyc));
+
+        vault = Vault(vaultFactory.raiseFund(owner, "TEST FUND", "FUND", address(mockBaseToken), address(mockRewardToken), block.timestamp + 1 days));
         mockBaseToken.mint(user, TEST_AMOUNT);
+
+        vm.prank(factoryOwner);
+        kyc.approve(user, true);
     }
 
     function testDeposit() public {

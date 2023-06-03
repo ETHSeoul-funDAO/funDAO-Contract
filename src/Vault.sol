@@ -82,7 +82,7 @@ contract Vault is IVault, ERC20 {
         require(block.timestamp > fundingEnd, "funding not finished");
 
         rewardPerShare += amount * 1e18 / totalSupply();
-        rewardToken.safeTransferFrom(msg.sender, address(this), amount);
+        ERC20(rewardToken).safeTransferFrom(msg.sender, address(this), amount);
 
         emit Distribute(rewardToken, amount, rewardPerShare);
     }
@@ -94,7 +94,7 @@ contract Vault is IVault, ERC20 {
         uint256 claimed = userClaimed[msg.sender];
         uint256 claimable = (rewardPerShare * share / 1e18) - claimed;
 
-        rewardToken.safeTransfer(msg.sender, claimable);
+        ERC20(rewardToken).safeTransfer(msg.sender, claimable);
 
         emit Claim(msg.sender, claimable);
     }

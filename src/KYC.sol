@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
-contract KYC {
+import "./interface/IKYC.sol";
+
+contract KYC is IKYC {
 
     mapping(address => bool) public verified;
     address public owner;
-    
+
     modifier onlyOwner {
         require(owner == msg.sender, "only Owner");
         _;

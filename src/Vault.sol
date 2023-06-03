@@ -3,11 +3,14 @@ pragma solidity ^0.8.13;
 
 import "openzeppelin-contracts/token/ERC20/ERC20.sol";
 import "openzeppelin-contracts/token/ERC20/utils/SafeERC20.sol";
-import "./IVault.sol";
+import "./interface/IVault.sol";
+import "./interface/IKYC.sol";
+
 contract Vault is IVault, ERC20 {
 
     using SafeERC20 for ERC20;
 
+    address public kyc;
     address public baseToken;
     address public rewardToken;
     address public owner;
@@ -31,12 +34,18 @@ contract Vault is IVault, ERC20 {
         _;
     }
 
+    modifier onlyVerified {
+        require(IKYC(kyc).isVerified(msg.sender), "not verified");
+        _;
+    }
+
     constructor(
         address _owner, 
         string memory _tokenName, 
         string memory _symbol, 
         address _baseToken, 
         address _rewardToken,
+        address _kyc,
         uint256 _fundingEnd,
         uint256 _threshold
         ) ERC20(_tokenName, _symbol) {
@@ -45,12 +54,13 @@ contract Vault is IVault, ERC20 {
 
         baseToken = _baseToken;
         rewardToken = _rewardToken;
+        kyc = _kyc;
 
         fundingEnd = _fundingEnd;
         threshold = _threshold;
     }
 
-    function deposit(uint256 amount) external {
+    function deposit(uint256 amount) external onlyVerified {
         require(block.timestamp < fundingEnd, "funding finished");
 
         ERC20(baseToken).safeTransferFrom(msg.sender, address(this), amount);
@@ -59,7 +69,7 @@ contract Vault is IVault, ERC20 {
         emit Deposit(msg.sender, amount);
     }
 
-    function withdraw(uint256 amount) external {
+    function withdraw(uint256 amount) external onlyVerified {
         require(block.timestamp < fundingEnd, "funding finished");
 
         _burn(msg.sender, amount);
@@ -68,7 +78,7 @@ contract Vault is IVault, ERC20 {
         emit Withdraw(msg.sender, amount);
     }
 
-    function distribute(uint256 amount) external onlyOwner {
+    function distribute(uint256 amount) external onlyOwner onlyVerified {
         require(block.timestamp > fundingEnd, "funding not finished");
 
         rewardPerShare += amount * 1e18 / totalSupply();
@@ -77,7 +87,7 @@ contract Vault is IVault, ERC20 {
         emit Distribute(rewardToken, amount, rewardPerShare);
     }
 
-    function claim() external {
+    function claim() external onlyVerified {
         require(block.timestamp > fundingEnd, "funding not finished");
 
         uint256 share = balanceOf(msg.sender);
@@ -89,7 +99,7 @@ contract Vault is IVault, ERC20 {
         emit Claim(msg.sender, claimable);
     }
 
-    function propose(address target, uint256 amount, string memory title, string memory description, uint256 deadline) external onlyOwner returns(uint256) {
+    function propose(address target, uint256 amount, string memory title, string memory description, uint256 deadline) external onlyOwner onlyVerified returns(uint256) {
         uint256 id = proposals.length;
         uint256 targetVote = totalSupply() * threshold / DENOM;
 
@@ -100,7 +110,7 @@ contract Vault is IVault, ERC20 {
         return id;
     }
 
-    function vote(uint256 id, uint256 amount) external {
+    function vote(uint256 id, uint256 amount) onlyVerified external {
         require(block.timestamp < proposals[id].deadline, "vote finish");
         require(userVotes[id][msg.sender] + amount <= balanceOf(msg.sender), "need token");
 
@@ -110,7 +120,7 @@ contract Vault is IVault, ERC20 {
         emit Vote(id, msg.sender, amount);
     }
 
-    function execute(uint256 id) external onlyOwner {
+    function execute(uint256 id) external onlyOwner onlyVerified {
         require(block.timestamp > proposals[id].deadline, "vote not finish");
         require(proposals[id].targetVote <= proposalVotes[id], "rejected");
         require(proposals[id].executed == false, "executed");

@@ -9,13 +9,13 @@ contract VaultTest is Test {
     Vault public vault;
     MockBaseToken public mockBaseToken;
 
-    address user = address(0x123);
-    address owner = address(0x112233);
+    address public user = address(0x123);
+    address public owner = address(0x112233);
 
-    uint256 constant TEST_AMOUNT = 10_000 ether;
+    uint256 public constant TEST_AMOUNT = 10_000 ether;
     function setUp() public {
         mockBaseToken = new MockBaseToken();
-        vault = new Vault(owner, "TestFund", "FUND", address(mockBaseToken));
+        vault = new Vault(owner, "TestFund", "FUND", address(mockBaseToken), block.timestamp + 1 days, 0.5e5);
         mockBaseToken.mint(user, TEST_AMOUNT);
     }
 
@@ -28,6 +28,13 @@ contract VaultTest is Test {
 
     function testPropose() public {
         vm.prank(owner);
-        vault.propose(owner, 1e18, "test", "hello", block.timestamp);
+        vault.propose(owner, 1e18, "test", "hello", block.timestamp + 1 days);
+    }
+
+    function testVote() public {
+        testDeposit();
+        testPropose();
+        vm.prank(user);
+        vault.vote(0, TEST_AMOUNT);
     }
 }

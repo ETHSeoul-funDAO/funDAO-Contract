@@ -10,11 +10,12 @@ contract VaultTest is Test {
     MockBaseToken public mockBaseToken;
 
     address user = address(0x123);
+    address owner = address(0x112233);
 
     uint256 constant TEST_AMOUNT = 10_000 ether;
     function setUp() public {
         mockBaseToken = new MockBaseToken();
-        vault = new Vault("TestFund", "FUND", address(mockBaseToken));
+        vault = new Vault(owner, "TestFund", "FUND", address(mockBaseToken));
         mockBaseToken.mint(user, TEST_AMOUNT);
     }
 
@@ -23,5 +24,10 @@ contract VaultTest is Test {
         mockBaseToken.approve(address(vault), TEST_AMOUNT);
         vault.deposit(TEST_AMOUNT);
         vm.stopPrank();
+    }
+
+    function testPropose() public {
+        vm.prank(owner);
+        vault.propose(owner, 1e18, "test", "hello", block.timestamp);
     }
 }

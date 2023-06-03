@@ -27,6 +27,13 @@ contract VaultTest is Test {
         vm.stopPrank();
     }
 
+    function testWithdraw() public {
+        testDeposit();
+        vm.startPrank(user);
+        vault.withdraw(TEST_AMOUNT);
+        vm.stopPrank();
+    }
+
     function testPropose() public {
         vm.prank(owner);
         vault.propose(owner, PROPOSE_AMOUNT, "test", "hello", block.timestamp + 1 days);

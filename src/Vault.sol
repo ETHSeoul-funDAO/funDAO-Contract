@@ -47,6 +47,11 @@ contract Vault is IVault, ERC20 {
         ERC20(baseToken).safeTransferFrom(msg.sender, address(this), amount);
         _mint(msg.sender, amount);
     }
+    function withdraw(uint256 amount) external {
+        require(block.timestamp < fundingEnd, "funding finished");
+        _burn(msg.sender, amount);
+        ERC20(baseToken).safeTransfer(msg.sender, amount);
+    }
 
     function propose(address target, uint256 amount, string memory title, string memory description, uint256 deadline) external onlyOwner returns(uint256) {
         uint256 id = proposals.length;

@@ -36,6 +36,7 @@ interface IVault {
     );
 
     function deposit(uint256 amount) external;
+    function withdraw(uint256 amount) external;
     function propose(address target, uint256 amount, string memory title, string memory description, uint256 deadline) external returns(uint256);
     function vote(uint256 id, uint256 amount) external;
     function execute(uint256 id) external;

@@ -13,6 +13,7 @@ contract VaultTest is Test {
     address public owner = address(0x112233);
 
     uint256 public constant TEST_AMOUNT = 10_000 ether;
+    uint256 public constant PROPOSE_AMOUNT = 100 ether;
     function setUp() public {
         mockBaseToken = new MockBaseToken();
         vault = new Vault(owner, "TestFund", "FUND", address(mockBaseToken), block.timestamp + 1 days, 0.5e5);
@@ -28,7 +29,7 @@ contract VaultTest is Test {
 
     function testPropose() public {
         vm.prank(owner);
-        vault.propose(owner, 1e18, "test", "hello", block.timestamp + 1 days);
+        vault.propose(owner, PROPOSE_AMOUNT, "test", "hello", block.timestamp + 1 days);
     }
 
     function testVote() public {
@@ -36,5 +37,13 @@ contract VaultTest is Test {
         testPropose();
         vm.prank(user);
         vault.vote(0, TEST_AMOUNT);
+    }
+
+    function testExecute() public {
+        testVote();
+        skip(2 days);
+        vm.prank(owner);
+        vault.execute(0);
+        assertEq(mockBaseToken.balanceOf(owner), PROPOSE_AMOUNT);
     }
 }

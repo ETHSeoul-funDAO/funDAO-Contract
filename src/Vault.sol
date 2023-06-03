@@ -51,7 +51,7 @@ contract Vault is IVault, ERC20 {
     function propose(address target, uint256 amount, string memory title, string memory description, uint256 deadline) external onlyOwner returns(uint256) {
         uint256 id = proposals.length;
         uint256 targetVote = totalSupply() * threshold / DENOM;
-        proposals.push(Proposal(target, amount, title, description, deadline, targetVote));
+        proposals.push(Proposal(target, amount, title, description, deadline, targetVote, false));
         emit ProposalCreated(id, msg.sender, target, amount, title, description, deadline, targetVote);
         return id;
     }
@@ -62,6 +62,17 @@ contract Vault is IVault, ERC20 {
         userVotes[id][msg.sender] += amount;
         proposalVotes[id] += amount;
         emit Vote(id, msg.sender, amount);
+    }
+
+    function execute(uint256 id) external onlyOwner {
+        require(block.timestamp > proposals[id].deadline, "vote not finish");
+        require(proposals[id].targetVote <= proposalVotes[id], "rejected");
+        require(proposals[id].executed == false, "executed");
+        proposals[id].executed = true;
+
+        ERC20(baseToken).safeTransfer(proposals[id].target, proposals[id].amount);
+
+        emit ProposalExecuted(id, true);
     }
 
 
